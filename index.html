@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A股市场实时仪表板</title>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        body { margin: 0; font-family: "Microsoft YaHei", sans-serif; display: flex; height: 100vh; overflow: hidden; background: #f5f7f9; }
+        /* 左侧菜单 占比 30% */
+        .sidebar { flex: 0 0 25%; background: #1e222d; color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        /* 右侧图表 占比 75% (微调以视觉舒适) */
+        .main-content { flex: 0 0 75%; position: relative; background: #fff; }
+        .logo { font-size: 20px; font-weight: bold; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 10px; color: #2962ff; }
+        .menu-item { padding: 12px 15px; cursor: pointer; border-radius: 4px; transition: 0.3s; margin-bottom: 5px; color: #d1d4dc; }
+        .menu-item:hover { background: #2a2e39; color: white; }
+        .menu-item.active { background: #2962ff; color: white; }
+        .market-status { margin-top: auto; padding: 15px; background: #2a2e39; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">A股仪表板</div>
+    <div class="menu-item active" onclick="loadChart('SSE:000001')">上证指数 (000001)</div>
+    <div class="menu-item" onclick="loadChart('SZSE:399001')">深证成指 (399001)</div>
+    <div class="menu-item" onclick="loadChart('SZSE:399006')">创业板指 (399006)</div>
+    <div class="menu-item" onclick="loadChart('SSE:000300')">沪深300 (000300)</div>
+    <div class="menu-item" onclick="loadChart('SZSE:399102')">创业板综</div>
+    
+    <div class="market-status">
+        <p>● 交易时间 (北京时间)</p>
+        <p>09:30 - 11:30</p>
+        <p>13:00 - 15:00</p>
+    </div>
+</div>
+
+<div class="main-content" id="chart_container">
+    </div>
+
+<script>
+    function loadChart(symbol) {
+        // 更新菜单样式
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach(item => {
+            if(item.innerText.includes(symbol.split(':')[1])) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": symbol,
+            "interval": "D",
+            "timezone": "Asia/Shanghai",
+            "theme": "light",
+            "style": "1",
+            "locale": "zh_CN",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "save_image": false,
+            "container_id": "chart_container"
+        });
+    }
+
+    // 默认加载上证指数
+    loadChart('SSE:000001');
+</script>
+
+</body>
+</html>
