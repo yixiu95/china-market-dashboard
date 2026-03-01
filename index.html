@@ -3,68 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A股市场实时仪表板</title>
+    <title>A股行情仪表板 - 行业/主题ETF</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
-        body { margin: 0; font-family: "Microsoft YaHei", sans-serif; display: flex; height: 100vh; overflow: hidden; background: #f5f7f9; }
-        /* 左侧菜单 占比 30% */
-        .sidebar { flex: 0 0 25%; background: #1e222d; color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-        /* 右侧图表 占比 75% (微调以视觉舒适) */
-        .main-content { flex: 0 0 75%; position: relative; background: #fff; }
-        .logo { font-size: 20px; font-weight: bold; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 10px; color: #2962ff; }
-        .menu-item { padding: 12px 15px; cursor: pointer; border-radius: 4px; transition: 0.3s; margin-bottom: 5px; color: #d1d4dc; }
-        .menu-item:hover { background: #2a2e39; color: white; }
-        .menu-item.active { background: #2962ff; color: white; }
-        .market-status { margin-top: auto; padding: 15px; background: #2a2e39; border-radius: 6px; font-size: 13px; }
+        body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; display: flex; height: 100vh; background: #131722; color: #d1d4dc; }
+        
+        /* 比例调整：左侧 30%，右侧 70% */
+        .sidebar { flex: 0 0 30%; background: #1c202b; padding: 10px; overflow-y: auto; border-right: 1px solid #2a2e39; }
+        .main-content { flex: 0 0 70%; position: relative; }
+
+        .section-title { font-size: 14px; font-weight: bold; padding: 10px 5px; background: #2a2e39; margin-bottom: 5px; border-radius: 4px; }
+        
+        /* 表格样式：还原截图格式 */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; color: #787b86; padding: 8px 4px; border-bottom: 1px solid #2a2e39; }
+        td { padding: 10px 4px; border-bottom: 1px solid #2a2e39; cursor: pointer; }
+        tr:hover { background: #2a2e39; }
+
+        /* 评分圆圈样式 */
+        .rating { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; font-weight: bold; font-size: 10px; margin-right: 5px; }
+        .rating-a { background: #ff4a68; color: white; }
+        .rating-c { background: #00b386; color: white; }
+
+        /* 涨跌幅颜色 */
+        .up { color: #ff4a68; }
+        .down { color: #00b386; }
+        
+        .ticker-link { color: #787b86; text-decoration: none; font-size: 10px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="logo">A股仪表板</div>
-    <div class="menu-item active" onclick="loadChart('SSE:000001')">上证指数 (000001)</div>
-    <div class="menu-item" onclick="loadChart('SZSE:399001')">深证成指 (399001)</div>
-    <div class="menu-item" onclick="loadChart('SZSE:399006')">创业板指 (399006)</div>
-    <div class="menu-item" onclick="loadChart('SSE:000300')">沪深300 (000300)</div>
-    <div class="menu-item" onclick="loadChart('SZSE:399102')">创业板综</div>
-    
-    <div class="market-status">
-        <p>● 交易时间 (北京时间)</p>
-        <p>09:30 - 11:30</p>
-        <p>13:00 - 15:00</p>
-    </div>
+    <div class="section-title">主要指数 (4)</div>
+    <table>
+        <tr onclick="loadChart('SSE:000001')"><td><span class="rating rating-a">A</span>上证指数</td><td class="up">+0.15%</td></tr>
+        <tr onclick="loadChart('SZSE:399006')"><td><span class="rating rating-c">C</span>创业板指</td><td class="down">-0.27%</td></tr>
+    </table>
+
+    <br>
+    <div class="section-title">行业/主题 ETF (10)</div>
+    <table>
+        <thead>
+            <tr>
+                <th>标的名称</th>
+                <th>当日(%)</th>
+                <th>ATR%</th>
+                <th>LETF</th>
+            </tr>
+        </thead>
+        <tbody id="etf-list">
+            <tr onclick="loadChart('SHSE:512170')"><td><span class="rating rating-a">A</span>医疗ETF</td><td class="down">-0.26%</td><td>1.6%</td><td class="ticker-link">SH512170</td></tr>
+            <tr onclick="loadChart('SHSE:512800')"><td><span class="rating rating-c">C</span>银行ETF</td><td class="up">+0.13%</td><td>1.3%</td><td class="ticker-link">SH512800</td></tr>
+            <tr onclick="loadChart('SHSE:512660')"><td><span class="rating rating-a">A</span>军工ETF</td><td class="up">+4.87%</td><td>2.7%</td><td class="ticker-link">SH512660</td></tr>
+            <tr onclick="loadChart('SHSE:515030')"><td><span class="rating rating-a">A</span>新能源车ETF</td><td class="up">+0.80%</td><td>2.3%</td><td class="ticker-link">SH515030</td></tr>
+            <tr onclick="loadChart('SHSE:518880')"><td><span class="rating rating-a">A</span>黄金ETF</td><td class="up">+0.12%</td><td>2.5%</td><td class="ticker-link">SH518880</td></tr>
+            <tr onclick="loadChart('SHSE:513100')"><td><span class="rating rating-c">C</span>纳指ETF</td><td class="down">-0.17%</td><td>1.2%</td><td class="ticker-link">SH513100</td></tr>
+            <tr onclick="loadChart('SHSE:510300')"><td><span class="rating rating-c">C</span>300ETF</td><td class="up">+0.11%</td><td>1.3%</td><td class="ticker-link">SH510300</td></tr>
+            <tr onclick="loadChart('SHSE:512480')"><td><span class="rating rating-a">A</span>半导体ETF</td><td class="up">+1.25%</td><td>3.2%</td><td class="ticker-link">SH512480</td></tr>
+            
+            <tr onclick="loadChart('SHSE:561560')"><td><span class="rating rating-a">A</span>电力ETF</td><td class="up">+0.55%</td><td>1.8%</td><td class="ticker-link">SH561560</td></tr>
+            <tr onclick="loadChart('SZSE:159320')"><td><span class="rating rating-a">A</span>电网设备ETF</td><td class="up">+0.88%</td><td>2.1%</td><td class="ticker-link">SZ159320</td></tr>
+        </tbody>
+    </table>
 </div>
 
-<div class="main-content" id="chart_container">
-    </div>
+<div class="main-content" id="tv_chart"></div>
 
 <script>
     function loadChart(symbol) {
-        // 更新菜单样式
-        const items = document.querySelectorAll('.menu-item');
-        items.forEach(item => {
-            if(item.innerText.includes(symbol.split(':')[1])) item.classList.add('active');
-            else item.classList.remove('active');
-        });
-
         new TradingView.widget({
             "autosize": true,
             "symbol": symbol,
             "interval": "D",
             "timezone": "Asia/Shanghai",
-            "theme": "light",
+            "theme": "dark", // 使用深色主题配合 A 股风格
             "style": "1",
             "locale": "zh_CN",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_top_toolbar": false,
-            "save_image": false,
-            "container_id": "chart_container"
+            "container_id": "tv_chart"
         });
     }
-
-    // 默认加载上证指数
-    loadChart('SSE:000001');
+    // 默认加载第一个
+    loadChart('SHSE:561560');
 </script>
 
 </body>
