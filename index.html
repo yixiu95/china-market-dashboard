@@ -3,28 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A股实时行情仪表板 - 终极修复版</title>
+    <title>A股实时看板-正式版</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root { --bg: #131722; --sidebar: #1c202b; --text: #d1d4dc; --dim: #787b86; --red: #ff4a68; --green: #00b386; --line: #2a2e39; --blue: #2962ff; }
         body { margin: 0; font-family: -apple-system, "Microsoft YaHei", sans-serif; display: flex; height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; }
-        
-        /* 比例：左3右7 */
         .sidebar { flex: 0 0 30%; background: var(--sidebar); border-right: 1px solid var(--line); overflow-y: auto; display: flex; flex-direction: column; }
         .main-content { flex: 0 0 70%; background: #000; }
-
         .header { padding: 15px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
         .title { color: var(--blue); font-weight: bold; font-size: 16px; }
         .timer { font-size: 10px; color: var(--dim); }
-
         .section { font-size: 12px; padding: 6px 15px; background: var(--line); color: var(--text); font-weight: bold; }
-        
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; font-size: 11px; color: var(--dim); padding: 8px 5px; border-bottom: 1px solid var(--line); }
         td { padding: 10px 5px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 12px; }
         tr:hover { background: rgba(41, 98, 255, 0.1); }
         tr.active { background: #1e222d; border-left: 3px solid var(--blue); }
-
         .rating { display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 50%; font-size: 9px; margin-right: 4px; color: #fff; font-weight: bold; }
         .r-a { background: var(--red); } .r-c { background: var(--green); }
         .up { color: var(--red); } .down { color: var(--green); }
@@ -34,92 +28,69 @@
 <body>
 
 <div class="sidebar">
-    <div class="header">
-        <div class="title">A股专业监控台</div>
-        <div class="timer" id="clock">数据同步中...</div>
-    </div>
-
+    <div class="header"><div class="title">A股专业监控台</div><div class="timer" id="clock">等待同步...</div></div>
     <div class="section">主要指数</div>
     <table>
-        <thead><tr><th>指数名称</th><th>价格</th><th>涨跌</th></tr></thead>
+        <thead><tr><th>指数名称</th><th>现价</th><th>涨跌</th></tr></thead>
         <tbody>
-            <tr onclick="loadTV('SSE:000001', this)" data-sid="sh000001"><td>上证指数</td><td class="p">--</td><td class="c">--</td></tr>
-            <tr onclick="loadTV('SZSE:399006', this)" data-sid="sz399006"><td>创业板指</td><td class="p">--</td><td class="c">--</td></tr>
+            <tr onclick="loadTV('SSE:000001', this)" data-sid="s_sh000001"><td>上证指数</td><td class="p">--</td><td class="c">--</td></tr>
+            <tr onclick="loadTV('SZSE:399006', this)" data-sid="s_sz399006"><td>创业板指</td><td class="p">--</td><td class="c">--</td></tr>
         </tbody>
     </table>
-
-    <div class="section">行业/主题 ETF (实时)</div>
+    <div class="section">行业/主题 ETF (实时自选)</div>
     <table>
         <thead><tr><th>名称 / 代码</th><th>评级</th><th>当日(%)</th><th>ATR%</th></tr></thead>
         <tbody>
-            <tr onclick="loadTV('SSE:561560', this)" data-sid="sh561560"><td>电力ETF<span class="code">561560</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>1.8%</td></tr>
-            <tr onclick="loadTV('SZSE:159320', this)" data-sid="sz159320"><td>电网设备ETF<span class="code">159320</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.1%</td></tr>
-            
-            <tr onclick="loadTV('SSE:512480', this)" data-sid="sh512480"><td>半导体ETF<span class="code">512480</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>3.2%</td></tr>
-            <tr onclick="loadTV('SSE:512660', this)" data-sid="sh512660"><td>军工ETF<span class="code">512660</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.7%</td></tr>
-            <tr onclick="loadTV('SSE:518880', this)" data-sid="sh518880"><td>黄金ETF<span class="code">518880</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.5%</td></tr>
-            <tr onclick="loadTV('SSE:510300', this)" data-sid="sh510300"><td>300ETF<span class="code">510300</span></td><td><span class="rating r-c">C</span></td><td class="c">--</td><td>1.3%</td></tr>
-            <tr onclick="loadTV('SSE:513100', this)" data-sid="sh513100"><td>纳指ETF<span class="code">513100</span></td><td><span class="rating r-c">C</span></td><td class="c">--</td><td>1.2%</td></tr>
-            <tr onclick="loadTV('SSE:515030', this)" data-sid="sh515030"><td>新能源车ETF<span class="code">515030</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.3%</td></tr>
-            <tr onclick="loadTV('SSE:512800', this)" data-sid="sh512800"><td>银行ETF<span class="code">512800</span></td><td><span class="rating r-c">C</span></td><td class="c">--</td><td>1.3%</td></tr>
-            <tr onclick="loadTV('SSE:512170', this)" data-sid="sh512170"><td>医疗ETF<span class="code">512170</span></td><td><span class="rating r-c">C</span></td><td class="c">--</td><td>1.6%</td></tr>
+            <tr onclick="loadTV('SSE:561560', this)" data-sid="s_sh561560"><td>电力ETF<span class="code">561560</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>1.8%</td></tr>
+            <tr onclick="loadTV('SZSE:159320', this)" data-sid="s_sz159320"><td>电网设备ETF<span class="code">159320</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.1%</td></tr>
+            <tr onclick="loadTV('SSE:512480', this)" data-sid="s_sh512480"><td>半导体ETF<span class="code">512480</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>3.2%</td></tr>
+            <tr onclick="loadTV('SSE:512660', this)" data-sid="s_sh512660"><td>军工ETF<span class="code">512660</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.7%</td></tr>
+            <tr onclick="loadTV('SSE:518880', this)" data-sid="s_sh518880"><td>黄金ETF<span class="code">518880</span></td><td><span class="rating r-a">A</span></td><td class="c">--</td><td>2.5%</td></tr>
+            <tr onclick="loadTV('SSE:510300', this)" data-sid="s_sh510300"><td>300ETF<span class="code">510300</span></td><td><span class="rating r-c">C</span></td><td class="c">--</td><td>1.3%</td></tr>
         </tbody>
     </table>
 </div>
-
 <div class="main-content" id="chart_box"></div>
 
 <script>
-    // 强制清除旧代码缓存的唯一方式是确保 symbol 字符串完全正确
     function loadTV(symbol, el) {
         document.querySelectorAll('tr').forEach(r => r.classList.remove('active'));
         if(el) el.classList.add('active');
-
         new TradingView.widget({
-            "autosize": true,
-            "symbol": symbol,
-            "interval": "D",
-            "timezone": "Asia/Shanghai",
-            "theme": "dark",
-            "style": "1",
-            "locale": "zh_CN",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_top_toolbar": false,
-            "container_id": "chart_box"
+            "autosize": true, "symbol": symbol, "interval": "D", "timezone": "Asia/Shanghai",
+            "theme": "dark", "style": "1", "locale": "zh_CN", "container_id": "chart_box"
         });
     }
 
-    // 实时抓取腾讯行情
     function updateData() {
         const rows = document.querySelectorAll('tr[data-sid]');
         const ids = Array.from(rows).map(r => r.getAttribute('data-sid')).join(',');
         const s = document.createElement('script');
+        // 强制使用 s_ 前缀获取腾讯实时精简行情
         s.src = `https://qt.gtimg.cn/q=${ids}`;
         document.body.appendChild(s);
-
         s.onload = () => {
             rows.forEach(r => {
                 const sid = r.getAttribute('data-sid');
                 const raw = window['v_' + sid];
                 if(raw) {
                     const d = raw.split('~');
+                    // 腾讯精简接口格式：1:名称, 3:现价, 4:涨跌额, 5:涨跌幅
                     if(r.querySelector('.p')) r.querySelector('.p').innerText = d[3];
-                    const pct = d[32];
+                    const pct = d[5];
                     const cell = r.querySelector('.c');
                     cell.innerText = (parseFloat(pct) > 0 ? '+' : '') + pct + '%';
                     cell.className = 'c ' + (parseFloat(pct) >= 0 ? 'up' : 'down');
                 }
             });
-            document.getElementById('clock').innerText = '最后同步: ' + new Date().toLocaleTimeString();
+            document.getElementById('clock').innerText = '实时同步: ' + new Date().toLocaleTimeString();
             document.body.removeChild(s);
         };
     }
 
-    setInterval(updateData, 30000);
+    setInterval(updateData, 10000); // 缩短为 10 秒刷新一次
     updateData();
-    // 启动默认显示 电力 ETF
-    loadTV('SSE:561560', document.querySelector('tr[data-sid="sh561560"]'));
+    loadTV('SSE:561560', document.querySelector('tr[data-sid="s_sh561560"]'));
 </script>
 </body>
 </html>
