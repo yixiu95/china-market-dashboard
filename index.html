@@ -3,88 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A股行情仪表板 - 行业/主题ETF</title>
+    <title>A股实时行情仪表板</title>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
-        body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; display: flex; height: 100vh; background: #131722; color: #d1d4dc; }
+        :root { --bg-color: #131722; --panel-bg: #1c202b; --text-main: #d1d4dc; --text-dim: #787b86; --red: #ff4a68; --green: #00b386; --border: #2a2e39; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; height: 100vh; background: var(--bg-color); color: var(--text-main); overflow: hidden; }
         
-        /* 比例调整：左侧 30%，右侧 70% */
-        .sidebar { flex: 0 0 30%; background: #1c202b; padding: 10px; overflow-y: auto; border-right: 1px solid #2a2e39; }
-        .main-content { flex: 0 0 70%; position: relative; }
+        /* 布局：左3右7 */
+        .sidebar { flex: 0 0 30%; background: var(--panel-bg); display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow-y: auto; }
+        .main-content { flex: 0 0 70%; position: relative; background: #000; }
 
-        .section-title { font-size: 14px; font-weight: bold; padding: 10px 5px; background: #2a2e39; margin-bottom: 5px; border-radius: 4px; }
+        .header { padding: 15px; font-size: 18px; font-weight: bold; border-bottom: 1px solid var(--border); color: #2962ff; display: flex; justify-content: space-between; }
+        .refresh-tag { font-size: 10px; color: var(--text-dim); font-weight: normal; }
+
+        .section-title { font-size: 13px; padding: 8px 15px; background: var(--border); color: var(--text-main); font-weight: 600; margin-top: 10px; }
         
-        /* 表格样式：还原截图格式 */
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { text-align: left; color: #787b86; padding: 8px 4px; border-bottom: 1px solid #2a2e39; }
-        td { padding: 10px 4px; border-bottom: 1px solid #2a2e39; cursor: pointer; }
-        tr:hover { background: #2a2e39; }
+        th { text-align: left; color: var(--text-dim); padding: 10px 5px; border-bottom: 1px solid var(--border); font-weight: normal; }
+        td { padding: 12px 5px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        tr:hover td { background: var(--border); }
+        tr.active td { background: #1e222d; border-left: 3px solid #2962ff; }
 
-        /* 评分圆圈样式 */
-        .rating { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; font-weight: bold; font-size: 10px; margin-right: 5px; }
-        .rating-a { background: #ff4a68; color: white; }
-        .rating-c { background: #00b386; color: white; }
+        /* 评分圆圈 */
+        .rating { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 6px; }
+        .rating-a { background: var(--red); color: white; }
+        .rating-c { background: var(--green); color: white; }
 
-        /* 涨跌幅颜色 */
-        .up { color: #ff4a68; }
-        .down { color: #00b386; }
-        
-        .ticker-link { color: #787b86; text-decoration: none; font-size: 10px; }
+        .up { color: var(--red); font-weight: bold; }
+        .down { color: var(--green); font-weight: bold; }
+        .ticker { font-size: 10px; color: var(--text-dim); display: block; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="section-title">主要指数 (4)</div>
-    <table>
-        <tr onclick="loadChart('SSE:000001')"><td><span class="rating rating-a">A</span>上证指数</td><td class="up">+0.15%</td></tr>
-        <tr onclick="loadChart('SZSE:399006')"><td><span class="rating rating-c">C</span>创业板指</td><td class="down">-0.27%</td></tr>
+    <div class="header">
+        <span>A股监控仪表板</span>
+        <span class="refresh-tag" id="update-time">正在同步...</span>
+    </div>
+
+    <div class="section-title">主要指数</div>
+    <table id="index-table">
+        <thead><tr><th>名称</th><th>现价</th><th>当日(%)</th></tr></thead>
+        <tbody>
+            <tr onclick="changeSymbol('SSE:000001', this)" data-id="sh000001"><td>上证指数</td><td class="price">--</td><td class="pct">--</td></tr>
+            <tr onclick="changeSymbol('SZSE:399006', this)" data-id="sz399006"><td>创业板指</td><td class="price">--</td><td class="pct">--</td></tr>
+        </tbody>
     </table>
 
-    <br>
     <div class="section-title">行业/主题 ETF (10)</div>
-    <table>
-        <thead>
-            <tr>
-                <th>标的名称</th>
-                <th>当日(%)</th>
-                <th>ATR%</th>
-                <th>LETF</th>
-            </tr>
-        </thead>
-        <tbody id="etf-list">
-            <tr onclick="loadChart('SHSE:512170')"><td><span class="rating rating-a">A</span>医疗ETF</td><td class="down">-0.26%</td><td>1.6%</td><td class="ticker-link">SH512170</td></tr>
-            <tr onclick="loadChart('SHSE:512800')"><td><span class="rating rating-c">C</span>银行ETF</td><td class="up">+0.13%</td><td>1.3%</td><td class="ticker-link">SH512800</td></tr>
-            <tr onclick="loadChart('SHSE:512660')"><td><span class="rating rating-a">A</span>军工ETF</td><td class="up">+4.87%</td><td>2.7%</td><td class="ticker-link">SH512660</td></tr>
-            <tr onclick="loadChart('SHSE:515030')"><td><span class="rating rating-a">A</span>新能源车ETF</td><td class="up">+0.80%</td><td>2.3%</td><td class="ticker-link">SH515030</td></tr>
-            <tr onclick="loadChart('SHSE:518880')"><td><span class="rating rating-a">A</span>黄金ETF</td><td class="up">+0.12%</td><td>2.5%</td><td class="ticker-link">SH518880</td></tr>
-            <tr onclick="loadChart('SHSE:513100')"><td><span class="rating rating-c">C</span>纳指ETF</td><td class="down">-0.17%</td><td>1.2%</td><td class="ticker-link">SH513100</td></tr>
-            <tr onclick="loadChart('SHSE:510300')"><td><span class="rating rating-c">C</span>300ETF</td><td class="up">+0.11%</td><td>1.3%</td><td class="ticker-link">SH510300</td></tr>
-            <tr onclick="loadChart('SHSE:512480')"><td><span class="rating rating-a">A</span>半导体ETF</td><td class="up">+1.25%</td><td>3.2%</td><td class="ticker-link">SH512480</td></tr>
-            
-            <tr onclick="loadChart('SHSE:561560')"><td><span class="rating rating-a">A</span>电力ETF</td><td class="up">+0.55%</td><td>1.8%</td><td class="ticker-link">SH561560</td></tr>
-            <tr onclick="loadChart('SZSE:159320')"><td><span class="rating rating-a">A</span>电网设备ETF</td><td class="up">+0.88%</td><td>2.1%</td><td class="ticker-link">SZ159320</td></tr>
+    <table id="etf-table">
+        <thead><tr><th>名称 / 代码</th><th>评分</th><th>当日(%)</th><th>ATR%</th></tr></thead>
+        <tbody>
+            <tr onclick="changeSymbol('SHSE:561560', this)" data-id="sh561560"><td>电力ETF<span class="ticker">561560</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>1.8%</td></tr>
+            <tr onclick="changeSymbol('SZSE:159320', this)" data-id="sz159320"><td>电网设备ETF<span class="ticker">159320</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>2.1%</td></tr>
+            <tr onclick="changeSymbol('SHSE:512480', this)" data-id="sh512480"><td>半导体ETF<span class="ticker">512480</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>3.2%</td></tr>
+            <tr onclick="changeSymbol('SHSE:512660', this)" data-id="sh512660"><td>军工ETF<span class="ticker">512660</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>2.7%</td></tr>
+            <tr onclick="changeSymbol('SHSE:518880', this)" data-id="sh518880"><td>黄金ETF<span class="ticker">518880</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>2.5%</td></tr>
+            <tr onclick="changeSymbol('SHSE:510300', this)" data-id="sh510300"><td>300ETF<span class="ticker">510300</span></td><td><span class="rating rating-c">C</span></td><td class="pct">--</td><td>1.3%</td></tr>
+            <tr onclick="changeSymbol('SHSE:513100', this)" data-id="sh513100"><td>纳指ETF<span class="ticker">513100</span></td><td><span class="rating rating-c">C</span></td><td class="pct">--</td><td>1.2%</td></tr>
+            <tr onclick="changeSymbol('SHSE:515030', this)" data-id="sh515030"><td>新能源车ETF<span class="ticker">515030</span></td><td><span class="rating rating-a">A</span></td><td class="pct">--</td><td>2.3%</td></tr>
+            <tr onclick="changeSymbol('SHSE:512800', this)" data-id="sh512800"><td>银行ETF<span class="ticker">512800</span></td><td><span class="rating rating-c">C</span></td><td class="pct">--</td><td>1.3%</td></tr>
+            <tr onclick="changeSymbol('SHSE:512170', this)" data-id="sh512170"><td>医疗ETF<span class="ticker">512170</span></td><td><span class="rating rating-c">C</span></td><td class="pct">--</td><td>1.6%</td></tr>
         </tbody>
     </table>
 </div>
 
-<div class="main-content" id="tv_chart"></div>
+<div class="main-content" id="chart_v2"></div>
 
 <script>
-    function loadChart(symbol) {
-        new TradingView.widget({
+    // 1. 加载图表
+    let currentWidget = null;
+    function changeSymbol(symbol, element) {
+        // 切换高亮
+        document.querySelectorAll('tr').forEach(r => r.classList.remove('active'));
+        if(element) element.classList.add('active');
+
+        currentWidget = new TradingView.widget({
             "autosize": true,
             "symbol": symbol,
             "interval": "D",
             "timezone": "Asia/Shanghai",
-            "theme": "dark", // 使用深色主题配合 A 股风格
+            "theme": "dark",
             "style": "1",
             "locale": "zh_CN",
-            "container_id": "tv_chart"
+            "container_id": "chart_v2",
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true
         });
     }
-    // 默认加载第一个
-    loadChart('SHSE:561560');
+
+    // 2. 实时数据获取 (腾讯接口)
+    async function fetchRealtimeData() {
+        const rows = document.querySelectorAll('tr[data-id]');
+        const ids = Array.from(rows).map(r => r.getAttribute('data-id')).join(',');
+        
+        try {
+            // 使用 JSONP 绕过跨域 (腾讯财经接口)
+            const script = document.createElement('script');
+            script.src = `https://qt.gtimg.cn/q=${ids}`;
+            document.body.appendChild(script);
+
+            script.onload = () => {
+                rows.forEach(row => {
+                    const id = row.getAttribute('data-id');
+                    const dataVar = window['v_' + id];
+                    if (dataVar) {
+                        const parts = dataVar.split('~');
+                        const price = parts[3];
+                        const changePct = parts[32];
+                        
+                        const priceCell = row.querySelector('.price');
+                        const pctCell = row.querySelector('.pct');
+                        
+                        if(priceCell) priceCell.innerText = price;
+                        pctCell.innerText = (changePct > 0 ? '+' : '') + changePct + '%';
+                        pctCell.className = 'pct ' + (changePct >= 0 ? 'up' : 'down');
+                    }
+                });
+                document.getElementById('update-time').innerText = '最后更新: ' + new Date().toLocaleTimeString();
+                document.body.removeChild(script);
+            };
+        } catch (e) { console.error("数据加载失败", e); }
+    }
+
+    // 每 30 秒自动刷新一次数据
+    setInterval(fetchRealtimeData, 30000);
+    fetchRealtimeData();
+
+    // 默认开启第一个
+    changeSymbol('SHSE:561560', document.querySelector('tr[data-id="sh561560"]'));
 </script>
 
 </body>
